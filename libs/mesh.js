@@ -24,6 +24,12 @@
                         }
                     } else if (asset instanceof tm.asset.MMD) {
                         this.superInit(asset.mesh);
+                        var that = this;
+                        this.on('enterframe', function(e) {
+                            var delta = 1/20;
+        					THREE.AnimationHandler.update(delta);
+                            that.threeObject.ikSolver.update();
+                        });
                     }
                 } else {
                     console.error("アセット'{0}'がないよ".format(mesh));
