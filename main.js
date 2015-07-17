@@ -61,13 +61,13 @@ tm.define("MikuOnStage", {
             .setPosition(320, 960*0.5)
             .addChildTo(this)
             .on("push", function() {
-                this.start = true;
-                this.bgm.play();
                 btn.visible = false;
             }.bind(this));
 
         this.bgm = tm.asset.AssetManager.get("bgm");
         THREE.AnimationHandler.update(0);
+
+        this.start = false;
 
         this.time = 0;
     },
@@ -79,6 +79,10 @@ tm.define("MikuOnStage", {
         if (this.time > 0.50) THREE.AnimationHandler.update(delta);
     },
     ontouchstart: function(e) {
-        tm.sound.WebAudio.unlock();
+        if (!this.start) {
+            tm.sound.WebAudio.unlock();
+            this.bgm.play();
+            this.start = true;
+        }
     },
 });
