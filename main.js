@@ -1,6 +1,7 @@
 tm.main(function() {
     var app = tm.hybrid.Application("#canvas2d", "#canvas3d");
     app.resize(640, 960).fitWindow().run();
+    app.enableStats();
     
     app.replaceScene(tm.game.LoadingScene({
         width: 640, height: 960,
@@ -64,8 +65,8 @@ tm.define("MikuOnStage", {
             });
         this.time = 0;
     },
-    update: function(e) {
-        var delta = 1/20;
+    update: function(app) {
+        var delta = app.deltaTime/1000;
         THREE.AnimationHandler.update(delta);
     },
 });
