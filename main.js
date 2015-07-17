@@ -7,7 +7,7 @@ tm.main(function() {
         width: 640, height: 960,
         assets: {
             hiyoko: "assets/hiyoco_nomal_full.png",
-            bgm: "assets/smile.m4a",
+            bgm: "assets/smile.mp3",
 
             //urlをモデルデータ、モーションデータのの順に指定
             miku: {
@@ -74,6 +74,6 @@ tm.define("MikuOnStage", {
         var delta = app.deltaTime/1000;
         this.time += delta;
 
-        if (this.time > 0.62) THREE.AnimationHandler.update(delta);
+        if (this.time > 0.51) THREE.AnimationHandler.update(delta);
     },
 });
