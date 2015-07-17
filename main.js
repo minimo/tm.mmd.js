@@ -63,5 +63,7 @@ tm.define("KiraraOnStage", {
         this.time = 0;
     },
     update: function(e) {
+        var delta = 1/20;
+        THREE.AnimationHandler.update(delta);
     },
 });
