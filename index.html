@@ -10,28 +10,15 @@
 
 <script src="https://cdn.rawgit.com/phi-jp/tmlib.js/0.5.2/build/tmlib.min.js"></script>
 <script src="https://cdn.rawgit.com/mrdoob/three.js/r71/build/three.min.js"></script>
-<script src="libs/perlin.js"></script>
+
+<script src="libs/MMDLoader.js"></script>
+<script src="libs/CCDIKSolver.js"></script>
+<script src="libs/MorphAnimation2.js"></script>
+
 <script src="libs/tm.hybrid.js"></script>
 <script src="libs/mesh.js"></script>
-<script src="tm.mqo.js"></script>
+<script src="libs/tm.mqo.js"></script>
 <script src="main.js"></script>
-
-<script id="vertexShaderSimple" type="x-shader/x-vertex">
-    varying vec2 vUv;   // fragmentShaderに渡すためのvarying変数
-    void main() {
-        vUv = uv;   // 処理する頂点ごとのuv(テクスチャ)座標をそのままfragmentShaderに横流しする
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);    // 変換：ローカル座標 → 配置 → カメラ座標
-        gl_Position = projectionMatrix * mvPosition;                // 変換：カメラ座標 → 画面座標
-    }
-</script>
-
-<script id="fragmentShader" type="x-shader/x-fragment">
-    uniform sampler2D texture;  // uniform 変数としてテクスチャのデータを受け取る
-    varying vec2 vUv;           // vertexShaderで処理されて渡されるテクスチャ座標
-    void main() {
-        gl_FragColor = texture2D(texture, vUv); // テクスチャの色情報をそのままピクセルに塗る
-    }
-</script>
 
 </body>
 </html>
