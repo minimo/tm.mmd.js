@@ -6,35 +6,37 @@ tm.main(function() {
         width: 640, height: 960,
         assets: {
             hiyoko: "assets/hiyoco_nomal_full.png",
+
+            //urlをモデルデータ、モーションデータのの順に指定
             miku: {
                 type: "mmd",
                 url: ["pmd/miku_v2.pmd", "vmd/wavefile_v2.vmd"],
             },
         },
-        nextScene: KiraraOnStage,
+        nextScene: MikuOnStage,
     }));
 });
 
-tm.define("KiraraOnStage", {
+tm.define("MikuOnStage", {
     superClass: "tm.hybrid.Scene", // tm.app.Sceneの3D向け拡張
     init: function() {
         this.superInit();
 
         // カメラ調整
-        this.camera.setPosition(0, 0, 50);
+        this.camera.setPosition(0, 20, 30);
         this.camera.lookAt(new THREE.Vector3(0, 10, 0));
         
         // ライトを動かす
         this.directionalLight.setPosition(0, 100, -80);
 
         // メッシュを表示する
-        var kirara = tm.hybrid.Mesh("miku")
+        var miku = tm.hybrid.Mesh("miku")
             .addChildTo(this)
             .setPosition(0, 0, 0)
             .on("enterframe", function() {
-                if (this.rolling) this.rotationY += 5; // Y軸回転
+                if (this.rolling) this.rotationY += 10; // Y軸回転
             });
-        kirara.rolling = false;
+        miku.rolling = false;
 
         // 2Dスプライトとの併用も可能
         var hiyoko = tm.display.Sprite("hiyoko", 32, 32)
@@ -57,8 +59,8 @@ tm.define("KiraraOnStage", {
             .setPosition(320, 100)
             .addChildTo(this)
             .on("push", function() {
-                kirara.rolling = !kirara.rolling;
-                this.label.text = kirara.rolling ? "とまる" : "かいてん";
+                miku.rolling = !miku.rolling;
+                this.label.text = miku.rolling ? "とまる" : "かいてん";
             });
         this.time = 0;
     },
