@@ -44,7 +44,7 @@ tm.define("MikuOnStage", {
         var hiyoko = tm.display.Sprite("hiyoko", 32, 32)
             .setScale(4)
             .setFrameIndex(0)
-            .addChildTo(this)
+//            .addChildTo(this)
             .on("enterframe", function() {
                 this.x += this.vx * 10;
                 this.y += this.vy * 10;
@@ -57,23 +57,28 @@ tm.define("MikuOnStage", {
         hiyoko.vx = 1;
         hiyoko.vy = 1;
 
-        tm.ui.FlatButton({ text: "かいてん" })
-            .setPosition(320, 100)
+        var btn = tm.ui.FlatButton({ text: "スタート" })
+            .setPosition(320, 960*0.5)
             .addChildTo(this)
             .on("push", function() {
-                miku.rolling = !miku.rolling;
-                this.label.text = miku.rolling ? "とまる" : "かいてん";
-            });
+                this.start = true;
+                this.bgm.play();
+                btn.visible = false;
+            }.bind(this));
 
-        var bgm = tm.asset.AssetManager.get("bgm").play();
+        this.bgm = tm.asset.AssetManager.get("bgm");
         THREE.AnimationHandler.update(0);
 
         this.time = 0;
     },
     update: function(app) {
+        if (!this.start) return;
         var delta = app.deltaTime/1000;
         this.time += delta;
 
-        if (this.time > 0.51) THREE.AnimationHandler.update(delta);
+        if (this.time > 0.50) THREE.AnimationHandler.update(delta);
+    },
+    ontouchstart: function(e) {
+        tm.sound.WebAudio.unlock();
     },
 });
