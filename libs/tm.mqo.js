@@ -21,6 +21,7 @@
                 _modelPath += modelurl[i];
             }
 
+            var that = this;
             var req = new XMLHttpRequest();
             req.open("GET", path, true);
             req.onload = function() {
@@ -28,7 +29,6 @@
                 that.loadFromData(data);
             };
             req.send(null);
-            var that = this;
         },
 
         //データからロード

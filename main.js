@@ -6,6 +6,10 @@ tm.main(function() {
         width: 640, height: 960,
         assets: {
             hiyoko: "assets/hiyoco_nomal_full.png",
+            miku: {
+                type: "mmd",
+                url: ["pmd/miku_v2.pmd", "vmd/wavefile_v2.vmd"],
+            },
         },
         nextScene: KiraraOnStage,
     }));
@@ -17,29 +21,14 @@ tm.define("KiraraOnStage", {
         this.superInit();
 
         // カメラ調整
-        this.camera.setPosition(0, 0, 2000);
+        this.camera.setPosition(0, 0, 100);
         this.camera.lookAt(new THREE.Vector3(0, 10, 0));
         
         // ライトを動かす
         this.directionalLight.setPosition(0, 100, -80);
-/*
-        this.directionalLight
-            .on("enterframe", function(e) {
-                var f = e.app.frame;
-                this.x = Math.cos(f * 0.1) * 10;
-                this.z = Math.sin(f * 0.1) * 10;
-            });
-*/
-        var sx = 20, sy = 20;
-        var texture = THREE.ImageUtils.loadTexture('assets/tmlib_logo.png');
-        var geometry = new THREE.PlaneGeometry(1000, 1000, sx, sy);
-        var material = new THREE.MeshLambertMaterial({map: texture, side: THREE.DoubleSide});
-        this.planeMesh = new THREE.Mesh(geometry, material);
-        this.planeMesh.sx = sx;
-        this.planeMesh.sy = sy;
 
         // メッシュを表示する
-        var kirara = tm.hybrid.Mesh(this.planeMesh)
+        var kirara = tm.hybrid.Mesh("miku")
             .addChildTo(this)
             .setPosition(0, 0, 0)
             .on("enterframe", function() {
@@ -74,17 +63,5 @@ tm.define("KiraraOnStage", {
         this.time = 0;
     },
     update: function(e) {
-        var time = this.time++;
-
-        this.planeMesh.geometry.verticesNeedUpdate = true;
-        var sx = this.planeMesh.sx, sy = this.planeMesh.sy;
-        for (var x = 0; x < sx+1; x++) {
-            for (var y = 0; y < sy+1; y++) {
-                var index = y*(sx+1)+x%(sy+1);
-                var vertex = this.planeMesh.geometry.vertices[index];
-                var amp = 50+500*noise.perlin3(x+time, y+time, time);
-                vertex.z = amp*Math.sin(-x/2 + time/5);
-            }
-        }
     },
 });
