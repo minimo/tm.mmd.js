@@ -7,6 +7,7 @@ tm.main(function() {
         width: 640, height: 960,
         assets: {
             hiyoko: "assets/hiyoco_nomal_full.png",
+            bgm: "assets/smile.m4a",
 
             //urlをモデルデータ、モーションデータのの順に指定
             miku: {
@@ -63,10 +64,16 @@ tm.define("MikuOnStage", {
                 miku.rolling = !miku.rolling;
                 this.label.text = miku.rolling ? "とまる" : "かいてん";
             });
+
+        var bgm = tm.asset.AssetManager.get("bgm").play();
+        THREE.AnimationHandler.update(0);
+
         this.time = 0;
     },
     update: function(app) {
         var delta = app.deltaTime/1000;
-        THREE.AnimationHandler.update(delta);
+        this.time += delta;
+
+        if (this.time > 0.62) THREE.AnimationHandler.update(delta);
     },
 });
