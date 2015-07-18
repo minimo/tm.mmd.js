@@ -73,16 +73,18 @@ tm.define("MikuOnStage", {
     },
     update: function(app) {
         if (!this.start) return;
-        var delta = app.deltaTime/1000;
-        this.time += delta;
-
-        if (this.time > 0.50) THREE.AnimationHandler.update(delta);
+        var t = this.bgm.context.currentTime;
+        var delta = t - this.beforeTime;
+        THREE.AnimationHandler.update(app.deltaTime/1000);
+        this.beforeTime = t;
     },
     ontouchstart: function(e) {
         if (!this.start) {
             tm.sound.WebAudio.unlock();
+            this.bgm.context.currentTime = 0;
             this.bgm.play();
             this.start = true;
+            this.beforeTime = 0;
         }
     },
 });
