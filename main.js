@@ -1,5 +1,6 @@
 tm.main(function() {
     var app = tm.hybrid.Application("#canvas2d", "#canvas3d");
+    app.fps = 60;
     app.resize(640, 960).fitWindow().run();
     app.enableStats();
     
