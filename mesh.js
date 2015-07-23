@@ -24,7 +24,7 @@
                         }
                     } else if (asset instanceof tm.asset.PMD) {
                         var loader = new THREE.MMDLoader();
-                        var mesh = loader.createMesh(asset.pmd, undefined, asset.pmd.texturePath, function(){}, function(){});
+                        var mesh = loader.createMesh(asset.data, undefined, asset.pmd.texturePath, function(){}, function(){});
                         this.superInit(mesh);
                     } else if (asset instanceof tm.asset.MMD) {
                         this.superInit(asset.mesh);
