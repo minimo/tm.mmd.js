@@ -23,14 +23,17 @@
                             tm.hybrid.Mesh(asset.model.meshes[i]).addChildTo(this);
                         }
                     } else if (asset instanceof tm.asset.PMD) {
-                        this.superInit(asset.mesh);
+                        var loader = new THREE.MMDLoader();
+                        var mesh = loader.createMesh(asset.pmd, undefined, asset.pmd.texturePath, function(){}, function(){});
+                        this.superInit(mesh);
                     } else if (asset instanceof tm.asset.MMD) {
                         this.superInit(asset.mesh);
                         this._animation = asset.animation;
                         this._morphAnimation = asset.morphAnimation;
+                        this._ikSolver = asset.ikSolver;
                         var that = this;
                         this.on('enterframe', function(e) {
-                            that.threeObject.ikSolver.update();
+                            that._ikSolver.update();
                         });
                     }
                 } else {

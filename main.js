@@ -18,8 +18,8 @@ tm.main(function() {
             },
 
             //分けて読み込みも可能
-            mikuv2:     "assets/pmd/miku_v2.pmd",
-            wavefile:   "assets/vmd/wavefile_v2.vmd",
+            neru:   "assets/pmd/neru.pmd",
+            wave:   "assets/vmd/wavefile_v2.vmd",
         },
         nextScene: MikuOnStage,
     }));
@@ -45,6 +45,15 @@ tm.define("MikuOnStage", {
                 if (this.rolling) this.rotationY += 10; // Y軸回転
             });
         miku.rolling = false;
+
+
+        //分割読み込みからメッシュを生成
+        var neru = tm.hybrid.createMeshFromMMD("neru", "wave")
+            .addChildTo(this)
+            .setPosition(0, 0, -30)
+            .on("enterframe", function() {
+                if (this.rolling) this.rotationY += 10; // Y軸回転
+            });
 
         // 2Dスプライトとの併用も可能
         var hiyoko = tm.display.Sprite("hiyoko", 32, 32)
