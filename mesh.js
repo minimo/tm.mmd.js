@@ -22,6 +22,8 @@
                         for (var i = 1; i < asset.model.meshes.length; i++) {
                             tm.hybrid.Mesh(asset.model.meshes[i]).addChildTo(this);
                         }
+                    } else if (asset instanceof tm.asset.PMD) {
+                        this.superInit(asset.mesh);
                     } else if (asset instanceof tm.asset.MMD) {
                         this.superInit(asset.mesh);
                         this._animation = asset.animation;

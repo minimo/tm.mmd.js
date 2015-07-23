@@ -11,10 +11,15 @@ tm.main(function() {
             bgm: "assets/smile.mp3",
 
             //urlをモデルデータ、モーションデータの順に指定
+            //There is a need to specify the PMD and VMD together to play the MMD
             miku: {
                 type: "mmd",
                 url: ["assets/pmd/miku_v2.pmd", "assets/vmd/wavefile_v2.vmd"],
             },
+
+            //分けて読み込みも可能
+            mikuv2:     "assets/pmd/miku_v2.pmd",
+            wavefile:   "assets/vmd/wavefile_v2.vmd",
         },
         nextScene: MikuOnStage,
     }));

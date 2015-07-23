@@ -83,7 +83,7 @@ THREE.MMDLoader.prototype.loadVmdFile = function ( pmdBuffer, vmdUrl, texturePat
 
 	if ( ! vmdUrl ) {
 
-		scope.parse( pmdBuffer, null, texturePath, callBack );
+		scope.parse( pmdBuffer, null, texturePath, callback );
 		return;
 
 	}
@@ -487,11 +487,13 @@ THREE.MMDLoader.prototype.createMesh = function ( pmd, vmd, texturePath, onProgr
 
 		}
 
-		for ( var i = 0; i < vmd.metadata.motionCount; i++ ) {
+        if (vmd) {
+    		for ( var i = 0; i < vmd.metadata.motionCount; i++ ) {
 
-			convertVector( vmd.motions[ i ].position );
-			convertQuaternion( vmd.motions[ i ].rotation );
+    			convertVector( vmd.motions[ i ].position );
+	    		convertQuaternion( vmd.motions[ i ].rotation );
 
+		    }
 		}
 
 	};
