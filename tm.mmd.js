@@ -25,11 +25,11 @@
                 var mesh = that.mesh = object;
                 mesh.position.y = -10;
 
-                var animation = new THREE.Animation(mesh, mesh.geometry.animation);
-                animation.play();
+                that.animation = new THREE.Animation(mesh, mesh.geometry.animation);
+                that.animation.play();
 
-                var morphAnimation = new THREE.MorphAnimation2(mesh, mesh.geometry.morphAnimation);
-                morphAnimation.play();
+                that.morphAnimation = new THREE.MorphAnimation2(mesh, mesh.geometry.morphAnimation);
+                that.morphAnimation.play();
 
                 mesh.ikSolver = new THREE.CCDIKSolver(mesh);
                 that.flare("load");
