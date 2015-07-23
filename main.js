@@ -44,13 +44,12 @@ tm.define("MikuOnStage", {
             .on("enterframe", function() {
                 if (this.rolling) this.rotationY += 10; // Y軸回転
             });
-        miku.rolling = false;
-
 
         //分割読み込みからメッシュを生成
         var neru = tm.hybrid.createMeshFromMMD("neru", "wave")
             .addChildTo(this)
             .setPosition(0, 0, -30)
+            .setRotation(0, 180, 0)
             .on("enterframe", function() {
                 if (this.rolling) this.rotationY += 10; // Y軸回転
             });
