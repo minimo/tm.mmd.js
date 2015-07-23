@@ -38,7 +38,7 @@ tm.define("MikuOnStage", {
         this.directionalLight.setPosition(0, 100, -80);
 
         // メッシュを表示する
-        var miku = tm.hybrid.Mesh("miku")
+        var miku = tm.hybrid.MMDMesh("miku")
             .addChildTo(this)
             .setPosition(0, 0, 0)
             .on("enterframe", function() {

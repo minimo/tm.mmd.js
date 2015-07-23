@@ -120,7 +120,7 @@
         var mesh = loader.createMesh(pmd.data, vmd.data, pmd.texturePath, onProgress, onError);
         mesh.position.y = -10;
 
-        var hybridMesh = tm.hybrid.Mesh(mesh);
+        var hybridMesh = tm.hybrid.MMDMesh(mesh);
 
         hybridMesh._animation = new THREE.Animation(mesh, mesh.geometry.animation);
         hybridMesh._animation.play();

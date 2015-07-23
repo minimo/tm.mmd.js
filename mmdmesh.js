@@ -1,5 +1,5 @@
 /*
- * mesh.js
+ * mmdmesh.js
  */
 
 (function() {
@@ -8,7 +8,7 @@
     // require("./delegateutil");
     // require("./threeelement");
 
-    tm.define("tm.hybrid.Mesh", {
+    tm.define("tm.hybrid.MMDMesh", {
         superClass: "tm.hybrid.ThreeElement",
 
         init: function(mesh) {
