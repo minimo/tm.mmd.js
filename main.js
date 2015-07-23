@@ -10,10 +10,10 @@ tm.main(function() {
             hiyoko: "assets/hiyoco_nomal_full.png",
             bgm: "assets/smile.mp3",
 
-            //urlをモデルデータ、モーションデータのの順に指定
+            //urlをモデルデータ、モーションデータの順に指定
             miku: {
                 type: "mmd",
-                url: ["pmd/miku_v2.pmd", "vmd/wavefile_v2.vmd"],
+                url: ["assets/pmd/miku_v2.pmd", "assets/vmd/wavefile_v2.vmd"],
             },
         },
         nextScene: MikuOnStage,
