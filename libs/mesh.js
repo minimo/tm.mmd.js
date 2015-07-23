@@ -24,6 +24,8 @@
                         }
                     } else if (asset instanceof tm.asset.MMD) {
                         this.superInit(asset.mesh);
+                        this._animation = asset.animation;
+                        this._morphAnimation = asset.morphAnimation;
                         var that = this;
                         this.on('enterframe', function(e) {
                             that.threeObject.ikSolver.update();
@@ -42,6 +44,20 @@
                 }
             } else {
                 this.superInit(new THREE.Mesh());
+            }
+        },
+
+        playAnimation: function(startTime, weight) {
+            if (this._animation && this._morphAnimation) {
+                this._animation.play(startTime, weight);
+                this._morphAnimation.play(startTime);
+            }
+        },
+
+        stopAnimation: function() {
+            if (this._animation && this._morphAnimation) {
+                this._animation.stop();
+                this._morphAnimation.stop();
             }
         },
     });
