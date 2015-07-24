@@ -26,6 +26,7 @@
             var that = this;
             var req = new XMLHttpRequest();
             req.open("GET", path, true);
+            req.responseType = "arraybuffer";
             req.onload = function() {
                 var data = req.responseText;
                 that.loadFromData(data);
@@ -52,7 +53,11 @@
 
     tm.define("DataViewEx", {
         init: function(buffer) {
-            this.dv = DataView(buffer);
+
+            // Check Little Endian
+            var littleEndian = ((new Uint8Array((new Uint16Array([0x00ff])).buffer))[0])? true: false;
+
+            this.dv = DataView(buffer, littleEndian);
             this.offset = 0;
         },
         getInt8: function() {
