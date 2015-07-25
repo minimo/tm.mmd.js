@@ -12,12 +12,10 @@ tm.main(function() {
 
             //urlをモデルデータ、モーションデータの順に指定
             //There is a need to specify the PMD and VMD together to play the MMD
-/*
             miku: {
                 type: "mmd",
                 url: ["assets/pmd/miku_v2.pmd", "assets/vmd/wavefile_v2.vmd"],
             },
-*/
 
             //分けて読み込みも可能
             neru:   "assets/pmd/neru.pmd",
@@ -48,6 +46,7 @@ tm.define("MikuOnStage", {
             });
 
         //分割読み込みからメッシュを生成
+/*
         var neru = tm.hybrid.createMeshFromMMD("neru", "wave")
             .addChildTo(this)
             .setPosition(0, 0, -30)
@@ -55,7 +54,7 @@ tm.define("MikuOnStage", {
             .on("enterframe", function() {
                 if (this.rolling) this.rotationY += 10; // Y軸回転
             });
-
+*/
         // 2Dスプライトとの併用も可能
         var hiyoko = tm.display.Sprite("hiyoko", 32, 32)
             .setScale(4)

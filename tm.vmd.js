@@ -59,7 +59,7 @@
                 m.position = [dv.getFloat32(), dv.getFloat32(), dv.getFloat32()];
                 m.rotation = [dv.getFloat32(), dv.getFloat32(), dv.getFloat32(), dv.getFloat32()];
                 m.interpolation = [];
-                for ( var i = 0; i < 64; i++ ) {
+                for ( var j = 0; j < 64; j++ ) {
                     m.interpolation.push(dv.getUint8());
                 }
                 vmd.motions.push(m);

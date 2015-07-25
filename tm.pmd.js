@@ -9,19 +9,19 @@
         superClass: "tm.event.EventDispatcher",
 
         init: function(path) {
+            this.superInit();
             this.pmd = null;
             this.path = path;
             this.texturePath = null;
-            this.superInit();
             this.loadFromURL(path);
         },
 
         // URLからロード
         loadFromURL: function(path) {
-            var modelurl = path.split("/");
-            _modelPath = "";
-            for (var i = 0, len = modelurl.length; i < len-1; i++) {
-                _modelPath += modelurl[i];
+            var url = path.split("/");
+            this.texturePath = "";
+            for (var i = 0, len = url.length; i < len-1; i++) {
+                this.texturePath += url[i]+"/";
             }
 
             var that = this;
@@ -127,7 +127,7 @@
                 ik.iteration = dv.getUint16();
                 ik.maxAngle = dv.getFloat32();
                 ik.links = [];
-                for (var i = 0; i < p.linkCount; i++) {
+                for (var j = 0; j < ik.linkCount; j++) {
                     ik.links.push(dv.getUint16());
                 }
                 pmd.iks.push(ik);
@@ -138,11 +138,11 @@
             pmd.morphs = [];
             for (var i = 0; i < metadata.morphCount; i++) {
                 var m = {};
-                m.name = dv.getSjisStrings( 20 );
+                m.name = dv.getSjisStrings(20);
                 m.vertexCount = dv.getUint32();
                 m.type = dv.getUint8();
                 m.vertices = [];
-                for (var i = 0; i < m.vertexCount; i++) {
+                for (var j = 0; j < m.vertexCount; j++) {
                     var mv = {};
                     mv.index = dv.getUint32();
                     mv.position = [dv.getFloat32(), dv.getFloat32(), dv.getFloat32()];
@@ -162,8 +162,8 @@
     tm.define("tm.DataViewEx", {
         init: function(buffer) {
             // Check Little Endian
-            var littleEndian = ((new Uint8Array((new Uint16Array([0x00ff])).buffer))[0])? true: false;
-            this.dv = new DataView(buffer, littleEndian);
+            this.littleEndian = ((new Uint8Array((new Uint16Array([0x00ff])).buffer))[0])? true: false;
+            this.dv = new DataView(buffer);
             this.offset = 0;
         },
         getInt8: function() {
