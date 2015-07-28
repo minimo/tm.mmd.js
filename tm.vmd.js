@@ -29,7 +29,7 @@
         loadFromData: function(data) {
             this.dv = tm.DataViewEx(data);
             this.offset = 0;
-            this.pmd = this._parse(data);
+            this.vmd = this._parse(data);
             this.flare("load");
         },
 

@@ -61,13 +61,318 @@
             return null;
         }
 
-        var onProgress = function(xhr) {};
-        var onError = function(xhr) {};
+        var geometry = new THREE.Geometry();
+        var material = new THREE.MeshFaceMaterial();
 
-        var loader = new THREE.MMDLoader();
-        var mesh = loader.createMesh(pmd.pmd, vmd.vmd, pmd.texturePath, onProgress, onError);
+        //左手系から右手系への変改
+        var convertVector = function(v) {v[2] = -v[2];};
+        var convertQuaternion = function (q) {q[0] = -q[0]; q[1] = -q[1];};
+        var convertIndexOrder = function (p) {var tmp = p[2]; p[2] = p[ 0 ]; p[0] = tmp;};
+        for (var i = 0; i < pmd.metadata.vertexCount; i++) {
+            convertVector(pmd.vertices[i].position);
+            convertVector(pmd.vertices[i].normal);
+        }
+        for (var i = 0; i < pmd.metadata.faceCount; i++) {
+            convertIndexOrder(pmd.faces[i].indices);
+        }
+        for (var i = 0; i < pmd.metadata.boneCount; i++) {
+            convertVector(pmd.bones[i].position);
+        }
+        for (var i = 0; i < pmd.metadata.morphCount; i++) {
+            var m = pmd.morphs[i];
+            for(var j = 0; j < m.vertexCount; j++) {
+                convertVector(m.vertices[j].position);
+            }
+        }
+        for (var i = 0; i < vmd.metadata.motionCount; i++) {
+            convertVector(vmd.motions[i].position);
+            convertQuaternion(vmd.motions[i].rotation);
+        }
+
+        //頂点情報構築
+        for (var i = 0; i < pmd.metadata.vertexCount; i++) {
+            geometry.vertices.push(
+                new THREE.Vector3(
+                    pmd.vertices[i].position[0],
+                    pmd.vertices[i].position[1],
+                    pmd.vertices[i].position[2]
+                )
+            );
+            geometry.skinIndices.push(
+                new THREE.Vector4(
+                    pmd.vertices[i].skinIndices[0],
+                    pmd.vertices[i].skinIndices[1],
+                    0.0, 0.0
+                )
+            );
+            geometry.skinWeights.push(
+                new THREE.Vector4(
+                    pmd.vertices[i].skinWeight/100,
+                    (100-pmd.vertices[i].skinWeight)/100,
+                    0.0, 0.0
+                )
+            );
+        }
+
+        //フェース情報構築
+        for (var i = 0; i < pmd.metadata.faceCount; i++) {
+            geometry.faces.push(
+                new THREE.Face3(
+                    pmd.faces[i].indices[0],
+                    pmd.faces[i].indices[1],
+                    pmd.faces[i].indices[2]
+                )
+            );
+            for (var j = 0; j < 3; j++) {
+                geometry.faces[i].vertexNormals[j] = new THREE.Vector3(
+                    pmd.vertices[pmd.faces[i].indices[j]].normal[0],
+                    pmd.vertices[pmd.faces[i].indices[j]].normal[1],
+                    pmd.vertices[pmd.faces[i].indices[j]].normal[2]
+                );
+            }
+        }
+
+        //ボーン情報構築
+        var bones = [];
+        for　(var i = 0; i < pmd.metadata.boneCount; i++) {
+            var b = pmd.bones[i];
+            var bone = {
+                parent: (b.parentIndex === 0xFFFF )? -1: b.parentIndex,
+                name: b.name,
+                pos: [b.position[0], b.position[1], b.position[2]],
+                rotq: [0, 0, 0, 1],
+                scl: [1, 1, 1]
+            };
+            if (bone.parent !== -1) {
+                bone.pos[0] -= pmd.bones[bone.parent].position[0];
+                bone.pos[1] -= pmd.bones[bone.parent].position[1];
+                bone.pos[2] -= pmd.bones[bone.parent].position[2];
+            }
+            bones.push(bone);
+        }
+        geometry.bones = bones;
+
+        //モーフィングデータ構築
+        for (var i = 0; i < pmd.metadata.morphCount; i++) {
+            var m = pmd.morphs[i];
+            var params = {};
+            params.name = m.name;
+            params.vertices = [];
+            for(var j = 0; j < pmd.metadata.vertexCount; j++) {
+                params.vertices[j] = new THREE.Vector3(
+                    geometry.vertices[j].x,
+                    geometry.vertices[j].y,
+                    geometry.vertices[j].z);
+            }
+            if (i !== 0) {
+                for(var j = 0; j < m.vertexCount; j++) {
+                    var v = m.vertices[j];
+                    var index = pmd.morphs[0].vertices[v.index].index;
+                    params.vertices[index].x += v.position[0];
+                    params.vertices[index].y += v.position[1];
+                    params.vertices[index].z += v.position[2];
+                }
+            }
+            geometry.morphTargets.push(params);
+        }
+
+        //マテリアル構築
+        var offset = 0;
+        var materialParams = [];
+        for (var i = 1; i < pmd.metadata.materialCount; i++) {
+            var dummy = [];
+            geometry.faceVertexUvs.push(dummy);
+        }
+        for (var i = 0; i < pmd.metadata.materialCount; i++) {
+            var m = pmd.materials[i];
+            var params = {};
+            for (var j = 0; j < m.faceCount; j++) {
+                geometry.faces[offset].materialIndex = i;
+                var uvs = [];
+                for (var k = 0; k < 3; k++) {
+                    var v = pmd.vertices[pmd.faces[offset].indices[k]];
+                    uvs.push(new THREE.Vector2(v.uv[0], v.uv[1]));
+                }
+                geometry.faceVertexUvs[0].push(uvs);
+                offset++;
+            }
+
+            params.shading = 'phong';
+            params.colorDiffuse = [m.diffuse[0], m.diffuse[1], m.diffuse[2]];
+            params.opacity = m.diffuse[3];
+            params.colorSpecular = [m.specular[0], m.specular[1], m.specular[2]];
+            params.specularCoef = m.shiness;
+
+            // temporal workaround
+            // TODO: implement correctly
+            params.doubleSided = true;
+
+            if (m.fileName) {
+                var fileName = m.fileName;
+
+                // temporal workaround, use .png instead of .tga
+                // TODO: tga file support
+                if (fileName.indexOf('.tga')) fileName = fileName.replace('.tga', '.png');
+
+                // temporal workaround, disable sphere mapping so far
+                // TODO: sphere mapping support
+                var index;
+                if ((index = fileName.lastIndexOf('*')) >= 0) fileName = fileName.slice(index+1);
+                if ((index = fileName.lastIndexOf('+')) >= 0) fileName = fileName.slice(index+1);
+                params.mapDiffuse = fileName;
+            } else {
+                params.colorEmissive = [m.emissive[0], m.emissive[1], m.emissive[2]];
+            }
+            materialParams.push(params);
+        }
+
+        var materials = scope.initMaterials(materialParams, texturePath);
+        for (var i = 0; i < materials.length; i++) {
+            var m = materials[i];
+            if (m.map) m.map.flipY = false;
+            m.skinning = true;
+            m.morphTargets = true;
+            material.materials.push(m);
+        }
+
+
+
+        var orderedMotions = [];
+        var boneTable = {};
+
+        for ( var i = 0; i < pmd.metadata.boneCount; i++ ) {
+
+            var b = pmd.bones[ i ];
+            boneTable[ b.name ] = i;
+            orderedMotions[ i ] = [];
+
+        }
+
+        for ( var i = 0; i < vmd.motions.length; i++ ) {
+
+            var m = vmd.motions[ i ];
+            var num = boneTable[ m.boneName ];
+
+            if ( num === undefined )
+                continue;
+
+            orderedMotions[ num ].push( m );
+
+        }
+
+        for ( var i = 0; i < orderedMotions.length; i++ ) {
+
+            orderedMotions[ i ].sort( function ( a, b ) {
+
+                return a.frameNum - b.frameNum;
+
+            } ) ;
+
+        }
+
+        var animation = {
+            name: 'Action',
+            fps: 30,
+            length: 0.0,
+            hierarchy: []
+        };
+
+        for ( var i = 0; i < geometry.bones.length; i++ ) {
+
+            animation.hierarchy.push(
+                {
+                    parent: geometry.bones[ i ].parent,
+                    keys: []
+                }
+            );
+
+        }
+
+        var maxTime = 0.0;
+
+        for ( var i = 0; i < orderedMotions.length; i++ ) {
+
+            var array = orderedMotions[ i ];
+
+            for ( var j = 0; j < array.length; j++ ) {
+
+                var t = array[ j ].frameNum / 30;
+                var p = array[ j ].position;
+                var r = array[ j ].rotation;
+
+                animation.hierarchy[ i ].keys.push(
+                    {
+                        time: t,
+                        pos: [ geometry.bones[ i ].pos[ 0 ] + p[ 0 ],
+                               geometry.bones[ i ].pos[ 1 ] + p[ 1 ],
+                               geometry.bones[ i ].pos[ 2 ] + p[ 2 ] ],
+                        rot: [ r[ 0 ], r[ 1 ], r[ 2 ], r[ 3 ] ],
+                        scl: [ 1, 1, 1 ]
+                    }
+                );
+
+                if ( t > maxTime )
+                    maxTime = t;
+
+            }
+
+        }
+
+        // add 2 secs as afterglow
+        maxTime += 2.0;
+        animation.length = maxTime;
+
+        for ( var i = 0; i < orderedMotions.length; i++ ) {
+
+            var keys = animation.hierarchy[ i ].keys;
+
+            if ( keys.length === 0 ) {
+
+                keys.push( { time: 0.0,
+                             pos: [ geometry.bones[ i ].pos[ 0 ],
+                                    geometry.bones[ i ].pos[ 1 ],
+                                    geometry.bones[ i ].pos[ 2 ] ],
+                             rot: [ 0, 0, 0, 1 ],
+                             scl: [ 1, 1, 1 ]
+                           } );
+
+            }
+
+            var k = keys[ 0 ];
+
+            if ( k.time !== 0.0 ) {
+
+                keys.unshift( { time: 0.0,
+                                 pos: [ k.pos[ 0 ], k.pos[ 1 ], k.pos[ 2 ] ],
+                                 rot: [ k.rot[ 0 ], k.rot[ 1 ], k.rot[ 2 ], k.rot[ 3 ] ],
+                                 scl: [ 1, 1, 1 ]
+                              } );
+
+            }
+
+            k = keys[ keys.length - 1 ];
+
+            if ( k.time < maxTime ) {
+
+                keys.push( { time: maxTime,
+                             pos: [ k.pos[ 0 ], k.pos[ 1 ], k.pos[ 2 ] ],
+                             rot: [ k.rot[ 0 ], k.rot[ 1 ], k.rot[ 2 ], k.rot[ 3 ] ],
+                             scl: [ 1, 1, 1 ]
+                           } );
+
+            }
+
+        }
+
+        geometry.animation = animation;
+
+
+        geometry.computeFaceNormals();
+        geometry.verticesNeedUpdate = true;
+        geometry.normalsNeedUpdate = true;
+        geometry.uvsNeedUpdate = true;
+        var mesh = new THREE.SkinnedMesh(geometry, material);
         mesh.position.y = -10;
-
         var hybridMesh = tm.hybrid.MMDMesh(mesh);
 
         hybridMesh._animation = new THREE.Animation(mesh, mesh.geometry.animation);
@@ -155,7 +460,6 @@
                                 limitation.y * c2,
                                 limitation.z * c2,
                                 c );
-
                         }
                         link.updateMatrixWorld(true);
                     }
