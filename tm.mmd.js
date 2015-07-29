@@ -41,22 +41,24 @@
     });
 
     tm.hybrid.createMeshFromMMD = function(pmdName, vmdName) {
-        var pmd = tm.asset.Manager.get(pmdName);
+        var asset = tm.asset.Manager.get(pmdName);
+        var pmd = asset.pmd;
         if (!pmd) {
             console.error("アセット'{0}'がないよ".format(pmdName));
             return null;
         }
-        if (!(pmd instanceof tm.asset.PMD)) {
+        if (!(asset instanceof tm.asset.PMD)) {
             console.error("アセット'{0}'はPMDじゃないよ".format(pmdName));
             return null;
         }
 
-        var vmd = tm.asset.Manager.get(vmdName);
+        var asset = tm.asset.Manager.get(vmdName);
+        var vmd = asset.vmd;
         if (!vmd) {
             console.error("アセット'{0}'がないよ".format(vmdName));
             return null;
         }
-        if (!(vmd instanceof tm.asset.VMD)) {
+        if (!(asset instanceof tm.asset.VMD)) {
             console.error("アセット'{0}'はVMDじゃないよ".format(vmdName));
             return null;
         }
@@ -235,137 +237,153 @@
             material.materials.push(m);
         }
 
-
-
+        //モーション構築
         var orderedMotions = [];
         var boneTable = {};
-
-        for ( var i = 0; i < pmd.metadata.boneCount; i++ ) {
-
-            var b = pmd.bones[ i ];
-            boneTable[ b.name ] = i;
-            orderedMotions[ i ] = [];
-
+        for (var i = 0; i < pmd.metadata.boneCount; i++) {
+            var b = pmd.bones[i];
+            boneTable[b.name] = i;
+            orderedMotions[i] = [];
         }
-
-        for ( var i = 0; i < vmd.motions.length; i++ ) {
-
-            var m = vmd.motions[ i ];
-            var num = boneTable[ m.boneName ];
-
-            if ( num === undefined )
-                continue;
-
-            orderedMotions[ num ].push( m );
-
+        for (var i = 0; i < vmd.motions.length; i++) {
+            var m = vmd.motions[i];
+            var num = boneTable[m.boneName];
+            if (num === undefined) continue;
+            orderedMotions[num].push(m);
         }
-
-        for ( var i = 0; i < orderedMotions.length; i++ ) {
-
-            orderedMotions[ i ].sort( function ( a, b ) {
-
+        for (var i = 0; i < orderedMotions.length; i++) {
+            orderedMotions[i].sort(function (a, b) {
                 return a.frameNum - b.frameNum;
-
-            } ) ;
-
+            });
         }
-
         var animation = {
             name: 'Action',
             fps: 30,
             length: 0.0,
             hierarchy: []
         };
-
-        for ( var i = 0; i < geometry.bones.length; i++ ) {
-
-            animation.hierarchy.push(
-                {
-                    parent: geometry.bones[ i ].parent,
-                    keys: []
-                }
-            );
+        for (var i = 0; i < geometry.bones.length; i++) {
+            animation.hierarchy.push({
+                parent: geometry.bones[i].parent,
+                keys: []
+            });
 
         }
 
         var maxTime = 0.0;
-
-        for ( var i = 0; i < orderedMotions.length; i++ ) {
-
-            var array = orderedMotions[ i ];
-
-            for ( var j = 0; j < array.length; j++ ) {
-
-                var t = array[ j ].frameNum / 30;
-                var p = array[ j ].position;
-                var r = array[ j ].rotation;
-
-                animation.hierarchy[ i ].keys.push(
-                    {
-                        time: t,
-                        pos: [ geometry.bones[ i ].pos[ 0 ] + p[ 0 ],
-                               geometry.bones[ i ].pos[ 1 ] + p[ 1 ],
-                               geometry.bones[ i ].pos[ 2 ] + p[ 2 ] ],
-                        rot: [ r[ 0 ], r[ 1 ], r[ 2 ], r[ 3 ] ],
-                        scl: [ 1, 1, 1 ]
-                    }
-                );
-
-                if ( t > maxTime )
-                    maxTime = t;
-
+        for (var i = 0; i < orderedMotions.length; i++) {
+            var array = orderedMotions[i];
+            for (var j = 0; j < array.length; j++) {
+                var t = array[j].frameNum/30;
+                var p = array[j].position;
+                var r = array[j].rotation;
+                animation.hierarchy[i].keys.push({
+                    time: t,
+                    pos: [
+                        geometry.bones[i].pos[0] + p[0],
+                        geometry.bones[i].pos[1] + p[1],
+                        geometry.bones[i].pos[2] + p[2]
+                    ],
+                    rot: [r[0], r[1], r[2], r[3]],
+                    scl: [1, 1, 1]
+                });
+                if (t > maxTime) maxTime = t;
             }
-
         }
 
         // add 2 secs as afterglow
         maxTime += 2.0;
         animation.length = maxTime;
-
-        for ( var i = 0; i < orderedMotions.length; i++ ) {
-
-            var keys = animation.hierarchy[ i ].keys;
-
-            if ( keys.length === 0 ) {
-
-                keys.push( { time: 0.0,
-                             pos: [ geometry.bones[ i ].pos[ 0 ],
-                                    geometry.bones[ i ].pos[ 1 ],
-                                    geometry.bones[ i ].pos[ 2 ] ],
-                             rot: [ 0, 0, 0, 1 ],
-                             scl: [ 1, 1, 1 ]
-                           } );
-
+        for (var i = 0; i < orderedMotions.length; i++) {
+            var keys = animation.hierarchy[i].keys;
+            if (keys.length === 0) {
+                keys.push({
+                    time: 0.0,
+                    pos: [
+                        geometry.bones[i].pos[0],
+                        geometry.bones[i].pos[1],
+                        geometry.bones[i].pos[2]
+                    ],
+                    rot: [0, 0, 0, 1],
+                    scl: [1, 1, 1]
+                });
             }
-
-            var k = keys[ 0 ];
-
-            if ( k.time !== 0.0 ) {
-
-                keys.unshift( { time: 0.0,
-                                 pos: [ k.pos[ 0 ], k.pos[ 1 ], k.pos[ 2 ] ],
-                                 rot: [ k.rot[ 0 ], k.rot[ 1 ], k.rot[ 2 ], k.rot[ 3 ] ],
-                                 scl: [ 1, 1, 1 ]
-                              } );
-
+            var k = keys[0];
+            if (k.time !== 0.0) {
+                keys.unshift({
+                    time: 0.0,
+                    pos: [k.pos[0], k.pos[1], k.pos[2]],
+                    rot: [k.rot[0], k.rot[1], k.rot[2], k.rot[3]],
+                    scl: [1, 1, 1]
+                });
             }
-
-            k = keys[ keys.length - 1 ];
-
-            if ( k.time < maxTime ) {
-
-                keys.push( { time: maxTime,
-                             pos: [ k.pos[ 0 ], k.pos[ 1 ], k.pos[ 2 ] ],
-                             rot: [ k.rot[ 0 ], k.rot[ 1 ], k.rot[ 2 ], k.rot[ 3 ] ],
-                             scl: [ 1, 1, 1 ]
-                           } );
-
+            k = keys[keys.length-1];
+            if (k.time < maxTime) {
+                keys.push({
+                    time: maxTime,
+                    pos: [k.pos[0], k.pos[1], k.pos[2]],
+                    rot: [k.rot[0], k.rot[1], k.rot[2], k.rot[3]],
+                    scl: [1, 1, 1]
+                });
             }
-
         }
-
         geometry.animation = animation;
 
+        //モーフィングアニメーション構築
+        var orderedMorphs = [];
+		var morphTable = {}
+		for (var i = 0; i < pmd.metadata.morphCount; i++) {
+			var m = pmd.morphs[i];
+			morphTable[m.name] = i;
+			orderedMorphs[i] = [];
+		}
+		for (var i = 0; i < vmd.morphs.length; i++) {
+    		var m = vmd.morphs[i];
+			var num = morphTable[ m.morphName ];
+			if ( num === undefined )continue;
+			orderedMorphs[num].push( m );
+		}
+		for (var i = 0; i < orderedMorphs.length; i++) {
+			orderedMorphs[i].sort(function (a, b) {
+				return a.frameNum - b.frameNum;
+			});
+		}
+		var morphAnimation = {
+			fps: 30,
+			length: 0.0,
+			hierarchy: []
+		};
+		for (var i = 0; i < pmd.metadata.morphCount; i++) {
+			morphAnimation.hierarchy.push({keys: []});
+		}
+		var maxTime = 0.0;
+		for (var i = 0; i < orderedMorphs.length; i++) {
+			var array = orderedMorphs[i];
+			for (var j = 0; j < array.length; j++) {
+                var t = array[j].frameNum / 30;
+                var w = array[j].weight;
+				morphAnimation.hierarchy[i].keys.push({time: t, weight: w});
+				if ( t > maxTime ) maxTime = t;
+			}
+		}
+
+		// add 2 secs as afterglow
+		maxTime += 2.0;
+
+        // use animation's length if exists. animation is master.
+        maxTime = (geometry.animation !== undefined && geometry.animation.length > 0.0 )? geometry.animation.length: maxTime;
+        morphAnimation.length = maxTime;
+		for (var i = 0; i < orderedMorphs.length; i++) {
+			var keys = morphAnimation.hierarchy[i].keys;
+			if (keys.length === 0) keys.push({time: 0.0, weight: 0.0});
+
+			var k = keys[0];
+			if ( k.time !== 0.0 ) keys.unshift({time: 0.0, weight: k.weight});
+
+			k = keys[keys.length-1];
+			if (k.time < maxTime) keys.push({time: maxTime, weight: k.weight});
+		}
+		geometry.morphAnimation = morphAnimation;
 
         geometry.computeFaceNormals();
         geometry.verticesNeedUpdate = true;
