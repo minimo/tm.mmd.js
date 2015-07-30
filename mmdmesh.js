@@ -27,10 +27,13 @@
                         var mesh = loader.createMesh(asset.data, undefined, asset.pmd.texturePath, function(){}, function(){});
                         this.superInit(mesh);
                     } else if (asset instanceof tm.asset.MMD) {
-                        this.superInit(asset.mesh);
-                        this._animation = asset.animation;
-                        this._morphAnimation = asset.morphAnimation;
-                        this._ikSolver = asset.ikSolver;
+                        var mesh = asset.mesh.clone();
+                        this.superInit(mesh);
+                        this._animation = new THREE.Animation(mesh, mesh.geometry.animation);
+                        this._animation.play();
+                        this._morphAnimation = new THREE.MorphAnimation2(mesh, mesh.geometry.morphAnimation);
+                        this._morphAnimation.play();
+                        this._ikSolver = new tm.hybrid.mmd.CCDIKSolver(mesh);
                         var that = this;
                         this.on('enterframe', function(e) {
                             that._ikSolver.update();

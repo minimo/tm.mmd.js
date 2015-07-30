@@ -3,42 +3,33 @@
 
     tm.define("tm.asset.MMD", {
         superClass: "tm.event.EventDispatcher",
-
         init: function(path) {
-            this.mesh = null;
             this.superInit();
-            this.load(path);
-        },
-
-        load: function(path) {
-            modelPath = path[0];
-            motionPath = path[1];
-
-            var pmd = tm.asset.PMD(modelPath);
-            var vmd = tm.asset.VMD(motionPath);
-            this.mesh = tm.hybrid.createThreeMeshFromMMD(pmd.pmd, vmd.vmd);
-            this.flare("load");
-/*
-            var onProgress = function(xhr) {};
-            var onError = function(xhr) {};
+            var modelPath = path[0];
+            var motionPath = path[1];
 
             var that = this;
-            var loader = new THREE.MMDLoader();
-            loader.load( modelPath, motionPath, function (object) {
-                var mesh = that.mesh = object;
-                mesh.position.y = -10;
+            var req = new XMLHttpRequest();
+            req.open("GET", modelPath, true);
+            req.responseType = "arraybuffer";
+            req.onload = function() {
+                var data = req.response;
+                that.pmd = PMDParser(data, modelPath);
 
-                that.animation = new THREE.Animation(mesh, mesh.geometry.animation);
-                that.animation.play();
+                var req2 = new XMLHttpRequest();
+                req2.open("GET", motionPath, true);
+                req2.responseType = "arraybuffer";
+                req2.onload = function() {
+                    var data2 = req2.response;
+                    that.vmd = VMDParser(data2);
+                    that.mesh = tm.hybrid.createThreeMeshFromMMD(that.pmd, that.vmd);
+                    that.flare("load");
+                };
+                req2.send(null);
+            };
+            req.send(null);
+        },
 
-                that.morphAnimation = new THREE.MorphAnimation2(mesh, mesh.geometry.morphAnimation);
-                that.morphAnimation.play();
-
-                that.ikSolver = new tm.hybrid.mmd.CCDIKSolver(mesh);
-                that.flare("load");
-            }, onProgress, onError);
-*/
-        }
     });
 
     //ローダーに拡張子登録
@@ -320,7 +311,6 @@
                 parent: geometry.bones[i].parent,
                 keys: []
             });
-
         }
 
         var maxTime = 0.0;
@@ -610,4 +600,81 @@
             return str;
         }
     });
+
+    THREE.MorphAnimation2 = function (mesh, data) {
+        this.mesh = mesh;
+        this.influences = mesh.morphTargetInfluences;
+        this.data = data;
+        this.hierarchy = data.hierarchy;
+        this.currentTime = 0;
+
+        for (var i = 0; i < this.hierarchy.length; i++) {
+            this.hierarchy[i].currentFrame = -1;
+        }
+        this.isPlaying = false;
+        this.loop = true;
+    };
+
+    THREE.MorphAnimation2.prototype = {
+        constructor: THREE.MorphAnimation2,
+
+        play: function(startTime) {
+            this.currentTime = startTime !== undefined? startTime: 0;
+            this.isPlaying = true;
+            this.reset();
+            THREE.AnimationHandler.play(this);
+        },
+
+        pause: function() {
+            this.isPlaying = false;
+            THREE.AnimationHandler.stop( this );
+        },
+
+        reset: function() {
+            for (var i = 0; i < this.hierarchy.length; i++) {
+                this.hierarchy[i].currentFrame = -1;
+            }
+        },
+
+        resetBlendWeights: function() {
+        },
+
+        update: function(delta) {
+            if (this.isPlaying === false) return;
+            this.currentTime += delta;
+            var duration = this.data.length;
+            if (this.currentTime > duration || this.currentTime < 0) {
+                if (this.loop) {
+                    this.currentTime %= duration;
+                    if (this.currentTime < 0) {
+                        this.currentTime += duration;
+                    }
+                    this.reset();
+                } else {
+                    this.stop();
+                }
+            }
+            for (var h = 0, hl = this.hierarchy.length; h < hl; h++) {
+                var object = this.hierarchy[h];
+                var keys = object.keys;
+                var weight = 0.0;
+
+                while (object.currentFrame+1 < keys.length && this.currentTime >= keys[object.currentFrame+1].time) {
+                    object.currentFrame++;
+                }
+                if (object.currentFrame >= 0) {
+                    var prevKey = keys[object.currentFrame];
+                    weight = prevKey.weight;
+                    if (object.currentFrame < keys.length) {
+                        var nextKey = keys[object.currentFrame+1];
+                        if (nextKey.time > prevKey.time) {
+                            var interpolation = (this.currentTime-prevKey.time)/(nextKey.time-prevKey.time);
+                            weight = weight*(1.0-interpolation)+nextKey.weight*interpolation;
+                        }
+                    }
+                }
+                this.influences[h] = weight;
+            }
+        }
+    };
 })();
