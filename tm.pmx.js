@@ -97,7 +97,7 @@
             v.uv = [dv.getFloat32(), dv.getFloat32()];
             v.appendUV = [];
             for (var j = 0; j < metadata.appendUV*4; j++) {
-                v.appendUV.push(dv.getFloat32();
+                v.appendUV.push(dv.getFloat32());
             }
 
             //スキンのデフォーム形式によって分岐
